@@ -1,4 +1,5 @@
 pub mod data;
+pub mod util;
 
 pub(crate) const VEELOG_MAGIC: &[u8; 32] = b"D784CB9E58D279B42FDA4D0A5FC7DA80";
 
@@ -13,25 +14,24 @@ mod tests {
         time::Duration,
     };
 
-    use crate::{
-        data::{FieldType, Log, LogRecord},
-    };
+    use crate::data::{FieldType, Log, LogHeader, LogRecord};
     use adif::parse;
     use sled::Db;
 
     #[test]
     pub fn db_playground() {
         test_with_db(|db| {
-            let mut log = Log::new(db).unwrap();
+            let header = LogHeader::new("N0CALL", "");
+            let mut log = Log::new_init(db, header).unwrap();
 
-            let data: String = fs::read_to_string("../testlog.adi").unwrap();
+            let data: String = fs::read_to_string("../testlog2.adi").unwrap();
             let adif = parse::parse_adif(&data);
 
             log.import_adif(adif).unwrap();
 
-            for i in 0..log.get_len() {
+            for i in 0..log.get_idx().unwrap() {
                 let record = log.get_record(i).unwrap();
-                for f in record.into_iter() {
+                for f in record.clone().into_iter() {
                     println!("{} {}", f.0, f.1);
                 }
             }
@@ -41,7 +41,8 @@ mod tests {
     #[test]
     pub fn test_db() {
         test_with_db(|db| {
-            let mut testlog = Log::new(db).unwrap();
+            let header = LogHeader::new("N0CALL", "");
+            let mut testlog = Log::new_init(db, header).unwrap();
             let mut record = LogRecord::new();
             record
                 .insert_field(FieldType::WorkedCall, "N0CALL")

@@ -1,18 +1,6 @@
 use chrono::Local;
 
-use std::fmt::Display;
-
-#[derive(Debug)]
-pub struct SerializeError {
-    pub message: String,
-    pub offender: String,
-}
-
-impl Display for SerializeError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}. Offending value: {}", self.message, self.offender)
-    }
-}
+use anyhow::Result;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ADIFType {
@@ -22,13 +10,12 @@ pub enum ADIFType {
 }
 
 impl ADIFType {
-    pub fn serialize(&self, field_name: &str) -> Result<String, SerializeError> {
+    pub fn serialize(&self, field_name: &str) -> Result<String> {
         let value = match self {
-            ADIFType::Str(val) => Ok(val.to_string()),
+            ADIFType::Str(val) => val.to_string(),
             ADIFType::Bool(_) => todo!(),
             ADIFType::Num(_) => todo!(),
         };
-        let value = value?;
         Ok(format!(
             "<{}:{}{}>{}",
             field_name.to_uppercase().replace(" ", "_"),
@@ -38,13 +25,15 @@ impl ADIFType {
         ))
     }
 
-    pub fn extract_value(&self) -> Result<String, SerializeError> {
+    pub fn extract_value(&self) -> Result<String> {
         match self {
             ADIFType::Str(v) => Ok(v.to_string()),
-            _ => return Err(SerializeError {
-                message: "Cannot handle ADIF record with type".to_string(),
-                offender: self.to_string(),
-            }),
+            _ => {
+                Err(util::Error::ADIFSerializeError {
+                    message: "Cannot handle ADIF record with type".to_string(),
+                    offender: self.to_string(),
+                })?
+            }
         }
     }
 }
@@ -63,14 +52,17 @@ impl std::fmt::Display for ADIFType {
 pub struct ADIFHeader(pub Vec<(String, ADIFType)>);
 
 impl ADIFHeader {
-    pub fn serialize(&self) -> Result<String, SerializeError> {
+    pub fn serialize(&self) -> Result<String> {
         let mut out = String::new();
-        out.push_str(&format!("Exported from veelog on {}\n", Local::now().format("%Y-%m-%d %H:%M:%S")));
+        out.push_str(&format!(
+            "Exported from veelog on {}\n",
+            Local::now().format("%Y-%m-%d %H:%M:%S")
+        ));
         let header = self
             .0
             .iter()
             .map(|(key, val)| val.serialize(key))
-            .collect::<Result<Vec<String>, SerializeError>>()?
+            .collect::<Result<Vec<String>>>()?
             .join("\n");
         out.push_str(&header);
         out.push('\n');
@@ -93,12 +85,12 @@ impl IntoIterator for ADIFHeader {
 pub struct ADIFRecord(pub Vec<(String, ADIFType)>);
 
 impl ADIFRecord {
-    pub fn serialize(&self) -> Result<String, SerializeError> {
+    pub fn serialize(&self) -> Result<String> {
         let mut out = self
             .0
             .iter()
             .map(|(key, val)| val.serialize(key))
-            .collect::<Result<Vec<String>, SerializeError>>()?
+            .collect::<Result<Vec<String>>>()?
             .join("");
         out.push_str("<EOR>");
         Ok(out)
@@ -126,14 +118,14 @@ impl ADIFFile {
         ADIFFile { header, body }
     }
 
-    pub fn serialize(&self) -> Result<String, SerializeError> {
+    pub fn serialize(&self) -> Result<String> {
         let mut output = self.header.serialize()?;
         output.push('\n');
         let records = self
             .body
             .iter()
             .map(|r| r.serialize())
-            .collect::<Result<Vec<String>, SerializeError>>()?
+            .collect::<Result<Vec<String>>>()?
             .join("\n");
         output.push_str(&records);
         Ok(output)
