@@ -17,7 +17,7 @@ pub fn parse_tokens(data: &str) -> Vec<Token> {
         .captures_iter(data)
         .map(|cap| Token {
             key: cap[1].to_string().to_uppercase(),
-            len: cap[2].parse().expect("len in token not integer"),
+            len: cap[2].parse().expect("len in token parse error"),
             ty: cap
                 .get(3)
                 .map(|m| m.as_str().chars().next().unwrap().to_ascii_uppercase()),
@@ -63,6 +63,7 @@ pub fn parse_adif(data: &str) -> ADIFFile {
         body: data
             .last()
             .unwrap_or(&"")
+            .replace("\n", "")
             .split_terminator("<EOR>")
             .collect::<Vec<&str>>()
             .iter()
@@ -73,8 +74,6 @@ pub fn parse_adif(data: &str) -> ADIFFile {
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
-
     use crate::{
         data::ADIFType,
         parse::{self, ADIFFile},

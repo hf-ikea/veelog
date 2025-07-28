@@ -1,6 +1,6 @@
-use std::fmt::Display;
-
 use chrono::Local;
+
+use std::fmt::Display;
 
 #[derive(Debug)]
 pub struct SerializeError {
@@ -37,6 +37,16 @@ impl ADIFType {
             value
         ))
     }
+
+    pub fn extract_value(&self) -> Result<String, SerializeError> {
+        match self {
+            ADIFType::Str(v) => Ok(v.to_string()),
+            _ => return Err(SerializeError {
+                message: "Cannot handle ADIF record with type".to_string(),
+                offender: self.to_string(),
+            }),
+        }
+    }
 }
 
 impl std::fmt::Display for ADIFType {
@@ -55,7 +65,7 @@ pub struct ADIFHeader(pub Vec<(String, ADIFType)>);
 impl ADIFHeader {
     pub fn serialize(&self) -> Result<String, SerializeError> {
         let mut out = String::new();
-        out.push_str(&format!("Generated on {}\n", Local::now().format("%Y-%m-%d %H:%M:%S")));
+        out.push_str(&format!("Exported from veelog on {}\n", Local::now().format("%Y-%m-%d %H:%M:%S")));
         let header = self
             .0
             .iter()
@@ -92,6 +102,16 @@ impl ADIFRecord {
             .join("");
         out.push_str("<EOR>");
         Ok(out)
+    }
+}
+
+impl IntoIterator for ADIFRecord {
+    type Item = (String, ADIFType);
+
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
     }
 }
 

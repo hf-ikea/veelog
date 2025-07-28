@@ -1,12 +1,8 @@
 [package]
-name = "swaglog"
+name = "veelog"
 version = "0.1.0"
 edition = "2024"
 
 [workspace]
 resolver = "3"
-members = ["adif", "ui"]
-
-[workspace.dependencies]
-adif = { path = "adif" }
-ui = { path = "ui" }
+members = ["adif", "db", "ui"]

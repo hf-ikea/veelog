@@ -20,12 +20,16 @@
       packages = [
         toolchain
         pkgs.rust-analyzer-unwrapped
+        pkgs.llvmPackages.libclang
+        pkgs.clang-tools
+        pkgs.pkg-config
+        pkgs.rustPlatform.bindgenHook
       ];
 
       RUST_SRC_PATH = "${toolchain}/lib/rustlib/src/rust/library";
 
       shellHook = ''
-        export PATH="/home/$(whoami)/.cargo/bin:$PATH"
+        export LIBCLANG_PATH="${pkgs.llvmPackages.libclang.lib}/lib";
       '';
     };
   };
