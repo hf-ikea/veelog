@@ -1,36 +1,49 @@
 {
+  description = "DevShell for shanti";
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
     rust-overlay.url = "github:oxalica/rust-overlay";
   };
 
-  outputs = {
-    self,
-    nixpkgs,
-    rust-overlay,
-  }: let
-    system = "x86_64-linux";
-    pkgs = import nixpkgs {
-      inherit system;
-      overlays = [rust-overlay.overlays.default];
-    };
-    toolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
-  in {
-    devShells.${system}.default = pkgs.mkShell {
-      packages = [
-        toolchain
-        pkgs.rust-analyzer-unwrapped
-        pkgs.llvmPackages.libclang
-        pkgs.clang-tools
-        pkgs.pkg-config
-        pkgs.rustPlatform.bindgenHook
-      ];
+  outputs =
+    {
+      nixpkgs,
+      rust-overlay,
+      flake-utils,
+      ...
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
+      let
+        overlays = [ (import rust-overlay) ];
+        pkgs = import nixpkgs {
+          inherit system overlays;
+        };
+        toolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
+      in
+      {
+        devShells.default =
+          with pkgs;
+          mkShell rec {
+            buildInputs = [
+              pkg-config
+              toolchain
 
-      RUST_SRC_PATH = "${toolchain}/lib/rustlib/src/rust/library";
+              xorg.libX11
+              xorg.libXcursor
+              xorg.libXrandr
+              xorg.libXi
+              xorg.libxcb
+              libxkbcommon
+              vulkan-loader
+              wayland
+            ];
 
-      shellHook = ''
-        export LIBCLANG_PATH="${pkgs.llvmPackages.libclang.lib}/lib";
-      '';
-    };
-  };
+            shellHook = ''
+              export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${builtins.toString (pkgs.lib.makeLibraryPath buildInputs)}";
+            '';
+          };
+      }
+    );
 }

@@ -1,10 +1,8 @@
-[package]
-name = "veelog"
-version = "0.1.0"
-edition = "2024"
-
 [workspace]
 resolver = "3"
-members = ["adif", "db", "ui", "util"]
+members = ["util", "adif", "db", "ui"]
 
-[dependencies]
+[workspace.dependencies]
+util = { path = "util" }
+adif = { path = "adif" }
+db = { path = "db" }

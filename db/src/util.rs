@@ -1,21 +1,31 @@
 use anyhow::{bail, Result};
 
 pub fn pretty_gridsquare(grid: &String) -> Result<String> {
-    let mut grid = grid.to_string();
     if !grid.is_ascii() {
-        bail!("GRIDSQUARE is not ASCII: {}", grid)
+        bail!("Gridsquare is not ASCII: {}", grid)
     }
     match grid.len() {
         4 => {
             Ok(grid.to_ascii_uppercase())
         }
         6 => {
-            let suffix = &grid.clone()[4..];
-            grid = grid[..4].to_uppercase();
-            grid += suffix;
-            dbg!(&grid);
-            Ok(grid)
+            Ok(grid[..4].to_uppercase() + &grid[4..].to_lowercase())
         }
         _ => bail!("GRIDSQUARE is of invalid length {}: {}", grid.len(), grid)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::util::pretty_gridsquare;
+
+    #[test]
+    pub fn test_prettify_grid() {
+        let grid = "aA00aA".to_string();
+        assert_eq!("AA00aa".to_string(), pretty_gridsquare(&grid).unwrap());
+        let grid = "aa00AA".to_string();
+        assert_eq!("AA00aa".to_string(), pretty_gridsquare(&grid).unwrap());
+        let grid = "aa00".to_string();
+        assert_eq!("AA00".to_string(), pretty_gridsquare(&grid).unwrap());
     }
 }
