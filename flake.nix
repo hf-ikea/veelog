@@ -27,8 +27,14 @@
           with pkgs;
           mkShell rec {
             buildInputs = [
+              rustPlatform.bindgenHook
               pkg-config
               toolchain
+
+              autoconf
+              automake
+              libtool
+              libclang
 
               xorg.libX11
               xorg.libXcursor

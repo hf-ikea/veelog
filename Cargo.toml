@@ -2,7 +2,5 @@
 resolver = "3"
 members = ["util", "adif", "db", "ui"]
 
-[workspace.dependencies]
-util = { path = "util" }
-adif = { path = "adif" }
-db = { path = "db" }
+[profile.dev]
+panic = "abort"

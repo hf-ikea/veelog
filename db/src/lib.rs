@@ -7,7 +7,7 @@ pub(crate) const VEELOG_MAGIC: &[u8; 32] = b"D784CB9E58D279B42FDA4D0A5FC7DA80";
 mod tests {
     use std::{
         env,
-        fs::{self, remove_dir_all},
+        fs::remove_dir_all,
         panic::UnwindSafe,
         path::Path,
         thread,
@@ -15,7 +15,6 @@ mod tests {
     };
 
     use crate::data::{FieldType, Log, LogHeader, LogRecord};
-    use adif::parse;
     use sled::Db;
 
     #[test]
@@ -24,14 +23,10 @@ mod tests {
             let header = LogHeader::new("N0CALL", "");
             let mut log = Log::new_init(db, header).unwrap();
 
-            let data: String = fs::read_to_string("../testlog2.adi").unwrap();
-            let adif = parse::parse_adif(&data);
+            log.import_adif_file("../testlog2.adi".into()).unwrap();
 
-            log.import_adif(adif).unwrap();
-
-            for i in 0..log.get_idx().unwrap() {
-                let record = log.get_record(i).unwrap();
-                for f in record.clone().into_iter() {
+            for record in log.get_records() {
+                for f in record.iter() {
                     println!("{} {}", f.0, f.1);
                 }
             }
@@ -54,15 +49,15 @@ mod tests {
 
             assert_eq!(
                 "N0CALL".to_string(),
-                dec.get_field(FieldType::WorkedCall).unwrap()
+                dec.get_field(&FieldType::WorkedCall).unwrap()
             );
             assert_eq!(
                 "AA00".to_string(),
-                dec.get_field(FieldType::GridSquare).unwrap()
+                dec.get_field(&FieldType::GridSquare).unwrap()
             );
             assert_eq!(
                 "2025-07-28T02:48:13Z".to_string(),
-                dec.get_field(FieldType::Timestamp).unwrap()
+                dec.get_field(&FieldType::Timestamp).unwrap()
             );
         });
     }

@@ -4,4 +4,14 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-iced = "0.13.1"
+hamlib = { path = "../../hamlib/hamlib" }
+db = { path = "../db" }
+adif = { path = "../adif" }
+anyhow = "1.0.98"
+iced = { version = "0.13.1", features = [ "advanced", "image", "tokio" ] }
+image = "0.24.9"
+log = "0.4.27"
+simple-logging = "2.0.2"
+thiserror = "2.0.12"
+rfd = "0.15.4"
+tokio = "1.47.0"

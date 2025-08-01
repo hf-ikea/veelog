@@ -9,6 +9,8 @@ util = { path = "../util" }
 anyhow = "1.0.98"
 bincode = { version = "2.0.1", features = [ "serde" ] }
 jiff = { version = "0.2.15", features = [ "serde" ] }
-serde = "1.0.219"
+serde = { version = "1.0.219", features = [ "derive" ] }
 sled = "0.34.7"
 indexmap = { version = "2.10.0", features = [ "serde" ] }
+strum = "0.27.2"
+strum_macros = "0.27.2"
